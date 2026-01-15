@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  solana-price-monitor:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - RUST_LOG=info
+      - RPC_URL=https://api.mainnet-beta.solana.com
+      - WS_URL=wss://api.mainnet-beta.solana.com
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+      - POLL_INTERVAL_MS=1000
+      - PRICE_DEVIATION_THRESHOLD=0.5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+

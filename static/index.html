@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Meme Coin Price Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.connecting {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            padding: 16px 15px;
+            font-size: 0.95rem;
+        }
+
+        .pair-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .price {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .neutral {
+            color: #6b7280;
+        }
+
+        .change {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .change.positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .change.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .timestamp {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .pool-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .reserves {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .updating {
+            animation: pulse 1s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .pool-address {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Solana Meme Coin Price Monitor</h1>
+            <p class="subtitle">Real-time prices from Raydium DEX • Updates every second</p>
+            <div id="status" class="status connecting">Connecting...</div>
+        </header>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Price (USDC)</th>
+                        <th>1-Min Change</th>
+                        <th>Base Reserve</th>
+                        <th>Quote Reserve</th>
+                        <th>Pool Address</th>
+                        <th>Last Update</th>
+                    </tr>
+                </thead>
+                <tbody id="prices-table">
+                    <tr>
+                        <td colspan="7" class="loading">Waiting for price data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <p>Data sourced directly from Solana blockchain • No external APIs used</p>
+            <p>Powered by Rust + Axum + WebSocket</p>
+        </footer>
+    </div>
+
+    <script>
+        let ws;
+        let priceHistory = {};
+        let reconnectTimeout;
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateStatus('connected');
+                clearTimeout(reconnectTimeout);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    updatePriceTable(data);
+                } catch (e) {
+                    console.error('Failed to parse message:', e);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateStatus('disconnected');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateStatus('disconnected');
+                // Attempt to reconnect after 3 seconds
+                reconnectTimeout = setTimeout(connect, 3000);
+            };
+        }
+
+        function updateStatus(status) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            
+            const statusText = {
+                'connected': '🟢 Connected',
+                'disconnected': '🔴 Disconnected',
+                'connecting': '🟡 Connecting...'
+            };
+            
+            statusEl.textContent = statusText[status] || status;
+        }
+
+        function updatePriceTable(data) {
+            const tableBody = document.getElementById('prices-table');
+            
+            if (!data.pairs || data.pairs.length === 0) {
+                return;
+            }
+
+            tableBody.innerHTML = '';
+
+            data.pairs.forEach(pair => {
+                const row = document.createElement('tr');
+                row.className = 'updating';
+
+                // Calculate 1-minute change
+                let changePercent = 0;
+                let changeClass = 'neutral';
+                
+                if (priceHistory[pair.pair]) {
+                    const oldPrice = priceHistory[pair.pair].price;
+                    changePercent = ((pair.price - oldPrice) / oldPrice) * 100;
+                    changeClass = changePercent > 0 ? 'positive' : (changePercent < 0 ? 'negative' : 'neutral');
+                }
+
+                // Store current price for next comparison
+                priceHistory[pair.pair] = {
+                    price: pair.price,
+                    timestamp: pair.timestamp
+                };
+
+                // Format numbers
+                const priceFormatted = pair.price.toFixed(8);
+                const changeFormatted = changePercent.toFixed(2);
+                const baseReserve = formatNumber(pair.base_reserve);
+                const quoteReserve = formatNumber(pair.quote_reserve);
+                const timestamp = new Date(pair.timestamp * 1000).toLocaleTimeString();
+                const poolAddress = truncateAddress(pair.pool_address);
+
+                row.innerHTML = `
+                    <td class="pair-name">${pair.pair}</td>
+                    <td class="price ${changeClass}">${priceFormatted}</td>
+                    <td>
+                        <span class="change ${changeClass}">
+                            ${changePercent > 0 ? '↑' : (changePercent < 0 ? '↓' : '→')} 
+                            ${Math.abs(changePercent).toFixed(2)}%
+                        </span>
+                    </td>
+                    <td class="reserves">${baseReserve}</td>
+                    <td class="reserves">${quoteReserve}</td>
+                    <td class="pool-address">${poolAddress}</td>
+                    <td class="timestamp">${timestamp}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toString();
+        }
+
+        function truncateAddress(address) {
+            if (address.length < 16) return address;
+            return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
+        }
+
+        // Start connection
+        connect();
+    </script>
+</body>
+</html>
+

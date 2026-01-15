@@ -1,0 +1,49 @@
+[Unit]
+Description=Solana Price Monitor - Real-time meme coin price tracking
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+
+# Working directory
+WorkingDirectory=/opt/solana-price-monitor
+
+# Environment variables
+Environment="RUST_LOG=info"
+Environment="RPC_URL=https://api.mainnet-beta.solana.com"
+Environment="WS_URL=wss://api.mainnet-beta.solana.com"
+Environment="SERVER_HOST=0.0.0.0"
+Environment="SERVER_PORT=3000"
+Environment="POLL_INTERVAL_MS=1000"
+Environment="PRICE_DEVIATION_THRESHOLD=0.5"
+
+# Executable
+ExecStart=/opt/solana-price-monitor/solana-price-monitor
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/solana-price-monitor
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=solana-price-monitor
+
+[Install]
+WantedBy=multi-user.target
+
+

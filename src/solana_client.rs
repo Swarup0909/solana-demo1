@@ -14,6 +14,7 @@ impl SolanaClient {
         Self { rpc_client }
     }
 
+    #[allow(dead_code)]
     pub async fn get_account(&self, pubkey: &Pubkey) -> Result<Account> {
         match self.rpc_client.get_account(pubkey).await {
             Ok(account) => Ok(account),
@@ -34,6 +35,7 @@ impl SolanaClient {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_token_account_balance(&self, pubkey: &Pubkey) -> Result<u64> {
         match self.rpc_client.get_token_account_balance(pubkey).await {
             Ok(balance) => {
@@ -48,6 +50,7 @@ impl SolanaClient {
         }
     }
 
+    #[allow(dead_code)]
     pub fn clone_client(&self) -> Arc<RpcClient> {
         Arc::clone(&self.rpc_client)
     }

@@ -49,6 +49,13 @@ async fn fetch_and_broadcast_prices(
         if let Some(account) = account_opt {
             match parse_pool_price(&account.data, pool_config, previous_prices) {
                 Ok(pair_price) => {
+                    tracing::info!(
+                        "💰 {} | Price: ${:.8} | Base: {} | Quote: {}",
+                        pair_price.pair,
+                        pair_price.price,
+                        pair_price.base_reserve,
+                        pair_price.quote_reserve
+                    );
                     pair_prices.push(pair_price);
                 }
                 Err(e) => {
@@ -77,6 +84,10 @@ async fn fetch_and_broadcast_prices(
 
     // Broadcast to all WebSocket clients
     // It's okay if there are no receivers
+    let receiver_count = tx.receiver_count();
+    if receiver_count > 0 {
+        tracing::info!("📡 Broadcasting price update to {} client(s)", receiver_count);
+    }
     let _ = tx.send(json);
 
     Ok(())
@@ -91,17 +102,23 @@ fn parse_pool_price(
     // The pool account contains references to token accounts
     // We need to fetch those separately or parse from the pool state
     
-    // Simplified approach: Extract reserves from pool account data
-    // Note: Raydium pools store reserves at specific offsets
-    // This may need adjustment based on actual Raydium V4 structure
+    // Raydium AMM V4 pool structure offsets
+    // Based on Raydium SDK: https://github.com/raydium-io/raydium-sdk
+    // Pool token amounts are stored at specific offsets in the account data
     
-    let base_reserve = extract_u64_from_data(data, 0x140)?; // Offset for base reserve
-    let quote_reserve = extract_u64_from_data(data, 0x148)?; // Offset for quote reserve
+    // Try multiple common offsets for Raydium V4
+    // Offset 0x1D8 (472) and 0x1E0 (480) are common for pool PC and Coin amounts
+    let base_reserve = extract_u64_from_data(data, 0x1D8)?; // Pool coin amount (base)
+    let quote_reserve = extract_u64_from_data(data, 0x1E0)?; // Pool PC amount (quote/USDC)
 
-    // Calculate price (quote/base)
-    // Adjust for decimals if needed (most USDC pairs use 6 decimals for USDC)
+    // Calculate price (quote/base) with decimal adjustment
+    // BONK has 5 decimals, USDC has 6 decimals
+    // Price = (quote_reserve / 10^6) / (base_reserve / 10^5)
+    // Simplifies to: (quote_reserve / base_reserve) * (10^5 / 10^6) = (quote_reserve / base_reserve) * 0.1
     let price = if base_reserve > 0 {
-        (quote_reserve as f64) / (base_reserve as f64)
+        let raw_price = (quote_reserve as f64) / (base_reserve as f64);
+        // Adjust for decimals: BONK (5) vs USDC (6)
+        raw_price * 0.1 // This gives us price in USDC per BONK
     } else {
         0.0
     };

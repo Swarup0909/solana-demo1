@@ -26,6 +26,7 @@ pub struct ArbitrageAlert {
 // Raydium AMM V4 account structure (simplified)
 // Based on https://github.com/raydium-io/raydium-amm
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RaydiumAmmInfo {
     pub status: u64,
     pub nonce: u64,
@@ -60,6 +61,7 @@ pub struct RaydiumAmmInfo {
 }
 
 impl RaydiumAmmInfo {
+    #[allow(dead_code)]
     pub fn parse_from_account_data(data: &[u8]) -> anyhow::Result<Self> {
         // Raydium AMM V4 uses a packed binary format
         // This is a simplified parser - actual implementation may need adjustments

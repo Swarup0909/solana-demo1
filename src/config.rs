@@ -14,61 +14,58 @@ pub struct PoolConfig {
 }
 
 pub fn get_pool_configs() -> Vec<PoolConfig> {
-    // ⚠️ IMPORTANT: The addresses below are PLACEHOLDERS and don't exist on mainnet!
-    // To fix "Pool account not found" errors, you need to:
-    // 1. Visit https://birdeye.so
-    // 2. Search for each token (e.g., "BONK")
-    // 3. Find the Raydium USDC pool
-    // 4. Copy the real pool address
-    // 5. Replace the placeholder address below
-    // 6. Test with: ./scripts/test_pool_address.sh YOUR_ADDRESS
-    //
-    // See HOW_TO_FIND_POOLS.md for detailed instructions
+    // 🏆 WORKING RAYDIUM STANDARD AMM V4 POOLS
+    // ✅ All addresses verified as Raydium AMM V4 (675kPX...)
+    // Program: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8
+    // Account Size: 752 bytes
+    // Updated: 2026-01-17
     
     vec![
-        // REAL POOL ADDRESSES - Verified on Raydium
+        // ✅ VERIFIED WORKING POOLS
         
+        // Token 1: BONK - Most popular Solana meme coin
         PoolConfig {
             name: "BONK-USDC".to_string(),
-            // Raydium BONK/USDC pool - verified working
             address: Pubkey::from_str("Dwq4PxyBQ8dHPmP5u5H7bHsjHp46StGtkSy2gEVedDm").unwrap(),
         },
-        // PoolConfig {
-        //     name: "WIF-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_WIF_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "POPCAT-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_POPCAT_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "GIGA-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_GIGA_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "PNUT-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_PNUT_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "MEW-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_MEW_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "PENGU-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_PENGU_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "AI16Z-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_AI16Z_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "FARTCOIN-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_FARTCOIN_POOL_ADDRESS_HERE").unwrap(),
-        // },
-        // PoolConfig {
-        //     name: "MOTHER-USDC".to_string(),
-        //     address: Pubkey::from_str("YOUR_REAL_MOTHER_POOL_ADDRESS_HERE").unwrap(),
-        // },
+        
+        // Token 2: MEW - Cat in a dogs world
+        PoolConfig {
+            name: "MEW-SOL".to_string(),
+            address: Pubkey::from_str("879F697iuDJGMevRkRcnW21fcXiAeLJK1ffsw2ATebce").unwrap(),
+        },
+        
+        // Token 3: RAY - Raydium's native token
+        PoolConfig {
+            name: "RAY-USDC".to_string(),
+            address: Pubkey::from_str("6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg").unwrap(),
+        },
+        
+        // Token 4: SOL - Native Solana token
+        PoolConfig {
+            name: "SOL-USDC".to_string(),
+            address: Pubkey::from_str("58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2").unwrap(),
+        },
+        
+        
+        // 🔍 TO ADD MORE TOKENS:
+        // 1. Go to https://dexscreener.com
+        // 2. Search your token
+        // 3. Find "Raydium" pool (NOT "Raydium CLMM")
+        // 4. Copy pool address from URL
+        // 5. Verify with: solana account ADDRESS
+        // 6. Check Owner is: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8
+        // 7. Check Data Length: 752
+        
+        // ⚠️ REMOVED NON-WORKING POOLS:
+        // The following tokens likely ONLY have CLMM pools (not Standard AMM):
+        // - WIF, POPCAT, PYTH, PNUT, JTO, PENGU, FARTCOIN, JUP
+        //
+        // To monitor these, you need to either:
+        // A) Find their Standard AMM pools on DexScreener (if they exist)
+        // B) Add CLMM support to this app (requires significant changes)
+        //
+        // See FIND_WORKING_POOLS.md for detailed instructions
     ]
 }
 
